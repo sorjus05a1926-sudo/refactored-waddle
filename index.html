@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIシンクロ診断 - ふたりの相性ラボ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+        }
+        .bg-mesh {
+            background-color: #fff0f5;
+            background-image: 
+                radial-gradient(at 15% 15%, hsla(338,90%,88%,1) 0px, transparent 50%),
+                radial-gradient(at 85% 20%, hsla(262,85%,90%,1) 0px, transparent 50%),
+                radial-gradient(at 50% 85%, hsla(32,95%,90%,1) 0px, transparent 50%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .option-btn:hover {
+            transform: translateY(-2px) scale(1.01);
+        }
+        .option-btn:active {
+            transform: translateY(0px) scale(0.98);
+        }
+        @keyframes pulse-heart {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.18); }
+        }
+        .animate-heart {
+            animation: pulse-heart 1.4s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-mesh text-slate-800 antialiased selection:bg-pink-200 selection:text-pink-900 flex flex-col justify-between min-h-screen p-4 sm:p-6 md:p-10">
+
+    <!-- Header -->
+    <header class="max-w-xl w-full mx-auto flex items-center justify-between py-2">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="confirmReset()">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-pink-500 to-violet-500 flex items-center justify-center text-white shadow-md shadow-pink-200">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-lg leading-none bg-gradient-to-r from-pink-600 to-violet-600 bg-clip-text text-transparent">AIシンクロ診断</h1>
+                <p class="text-xs text-slate-500 font-medium">ふたりの相性＆デートラボ</p>
+            </div>
+        </div>
+        <div id="mode-badge" class="hidden px-3 py-1 rounded-full text-xs font-bold bg-white/80 text-pink-600 border border-pink-100 shadow-sm">
+            恋人・夫婦モード
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-xl w-full mx-auto my-auto py-4">
+        
+        <!-- Screen 1: Setup -->
+        <section id="screen-setup" class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-pink-900/5 transition-all duration-300">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-pink-100 text-pink-500 mb-3 animate-float">
+                    <i data-lucide="heart-handshake" class="w-8 h-8"></i>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800">ふたりの相性をAIが徹底解剖！</h2>
+                <p class="text-sm text-slate-600 mt-2">6つのシチュエーション質問に交互に答えるだけ。<br>AIがふたりの隠れた相性や特別なデートを提案します。</p>
+            </div>
+
+            <div class="space-y-5">
+                <!-- Names Input -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-white/90 p-4 rounded-2xl border border-pink-100 shadow-sm focus-within:ring-2 focus-within:ring-pink-400 transition">
+                        <label class="block text-xs font-bold text-pink-500 mb-1 flex items-center gap-1">
+                            <i data-lucide="user" class="w-3.5 h-3.5"></i> プレイヤー1 (あなた)
+                        </label>
+                        <input type="text" id="p1-name" placeholder="例: たろう" value="あなた" maxlength="12"
+                            class="w-full text-base font-bold text-slate-800 placeholder-slate-300 focus:outline-none bg-transparent">
+                    </div>
+                    <div class="bg-white/90 p-4 rounded-2xl border border-violet-100 shadow-sm focus-within:ring-2 focus-within:ring-violet-400 transition">
+                        <label class="block text-xs font-bold text-violet-500 mb-1 flex items-center gap-1">
+                            <i data-lucide="user-check" class="w-3.5 h-3.5"></i> プレイヤー2 (お相手)
+                        </label>
+                        <input type="text" id="p2-name" placeholder="例: はなこ" value="パートナー" maxlength="12"
+                            class="w-full text-base font-bold text-slate-800 placeholder-slate-300 focus:outline-none bg-transparent">
+                    </div>
+                </div>
+
+                <!-- Relationship Type -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 text-center">ふたりの現在の関係は？</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="relation-selector">
+                        <button type="button" data-relation="恋人・カップル" onclick="selectRelation('恋人・カップル', this)" class="rel-btn active py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-pink-500 bg-pink-50 text-pink-700 transition">
+                            💑 恋人・カップル
+                        </button>
+                        <button type="button" data-relation="夫婦・パートナー" onclick="selectRelation('夫婦・パートナー', this)" class="rel-btn py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-transparent bg-white/80 text-slate-600 hover:bg-white transition">
+                            💍 夫婦
+                        </button>
+                        <button type="button" data-relation="気になる人・片思い" onclick="selectRelation('気になる人・片思い', this)" class="rel-btn py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-transparent bg-white/80 text-slate-600 hover:bg-white transition">
+                            🫣 気になる人
+                        </button>
+                        <button type="button" data-relation="親友・推し" onclick="selectRelation('親友・推し', this)" class="rel-btn py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-transparent bg-white/80 text-slate-600 hover:bg-white transition">
+                            ✨ 親友・推し
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Theme Course Selection -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 text-center">診断したいテーマコースを選択</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5" id="theme-selector">
+                        <button type="button" onclick="selectTheme('standard')" data-theme="standard" class="theme-btn active p-3 rounded-2xl text-left border-2 border-violet-500 bg-violet-50/90 transition flex items-center gap-3">
+                            <span class="text-2xl bg-white w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0">🌟</span>
+                            <div>
+                                <div class="text-xs font-extrabold text-violet-800">王道バランス診断</div>
+                                <div class="text-[11px] text-slate-500">日常・休日・価値観を総合チェック</div>
+                            </div>
+                        </button>
+                        <button type="button" onclick="selectTheme('romance')" data-theme="romance" class="theme-btn p-3 rounded-2xl text-left border-2 border-transparent bg-white/80 hover:bg-white transition flex items-center gap-3">
+                            <span class="text-2xl bg-slate-50 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0">💘</span>
+                            <div>
+                                <div class="text-xs font-extrabold text-slate-700">ディープな恋愛観</div>
+                                <div class="text-[11px] text-slate-500">愛情表現・連絡頻度・ヤキモチ度</div>
+                            </div>
+                        </button>
+                        <button type="button" onclick="selectTheme('marriage')" data-theme="marriage" class="theme-btn p-3 rounded-2xl text-left border-2 border-transparent bg-white/80 hover:bg-white transition flex items-center gap-3">
+                            <span class="text-2xl bg-slate-50 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0">🏡</span>
+                            <div>
+                                <div class="text-xs font-extrabold text-slate-700">結婚・同棲ライフ</div>
+                                <div class="text-[11px] text-slate-500">家事分担・金銭感覚・生活リズム</div>
+                            </div>
+                        </button>
+                        <button type="button" onclick="selectTheme('travel')" data-theme="travel" class="theme-btn p-3 rounded-2xl text-left border-2 border-transparent bg-white/80 hover:bg-white transition flex items-center gap-3">
+                            <span class="text-2xl bg-slate-50 w-10 h-10 rounded-xl flex items-center justify-center shadow-sm shrink-0">✈️</span>
+                            <div>
+                                <div class="text-xs font-extrabold text-slate-700">旅行＆お出かけ</div>
+                                <div class="text-[11px] text-slate-500">計画スタイル・グルメ・トラブル対応</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Question Count Selection -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-2 text-center">質問ボリューム</label>
+                    <div class="grid grid-cols-2 gap-2.5" id="count-selector">
+                        <button type="button" onclick="selectCount(6)" data-count="6" class="count-btn active py-2.5 px-4 rounded-xl text-xs font-bold border-2 border-pink-500 bg-pink-50 text-pink-700 transition flex items-center justify-center gap-1.5">
+                            <span>⚡ サクッと 6問</span>
+                            <span class="text-[10px] font-normal opacity-80">(約2分)</span>
+                        </button>
+                        <button type="button" onclick="selectCount(10)" data-count="10" class="count-btn py-2.5 px-4 rounded-xl text-xs font-bold border-2 border-transparent bg-white/80 text-slate-600 hover:bg-white transition flex items-center justify-center gap-1.5">
+                            <span>🔍 じっくり 10問</span>
+                            <span class="text-[10px] font-normal opacity-80">(精密診断)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- How to play tip -->
+                <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-3.5 flex items-start gap-3 text-xs text-indigo-900">
+                    <i data-lucide="info" class="w-5 h-5 text-indigo-500 shrink-0 mt-0.5"></i>
+                    <div>
+                        <span class="font-bold">遊び方：</span> 最初にプレイヤー1が回答し、その後スマホを渡してプレイヤー2が同じ質問に回答します。最後にAIが相性診断＆ふたりのイメージイラストを生成します！
+                    </div>
+                </div>
+
+                <button onclick="startQuiz()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-violet-600 text-white font-extrabold text-lg shadow-lg shadow-pink-500/25 hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2">
+                    <span>診断をスタートする</span>
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Screen 2: Quiz -->
+        <section id="screen-quiz" class="hidden glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-pink-900/5">
+            <!-- Turn Banner & Progress -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div id="turn-indicator" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-pink-100 text-pink-700">
+                        <span class="w-2 h-2 rounded-full bg-pink-500 animate-ping"></span>
+                        <span id="current-player-label">あなたの番です</span>
+                    </div>
+                    <div class="text-xs font-extrabold text-slate-400">
+                        QUESTION <span id="q-current-num" class="text-slate-700 text-base">1</span> / <span id="q-total-num">6</span>
+                    </div>
+                </div>
+                <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5">
+                    <div id="q-progress-bar" class="h-full bg-gradient-to-r from-pink-500 to-violet-500 rounded-full transition-all duration-300" style="width: 16.6%"></div>
+                </div>
+            </div>
+
+            <!-- Question Display -->
+            <div class="text-center my-6">
+                <div id="q-emoji" class="text-4xl mb-3">🏖️</div>
+                <span id="q-category" class="inline-block text-[11px] font-bold tracking-wider uppercase text-violet-500 bg-violet-50 px-2.5 py-0.5 rounded-md mb-2">休日の過ごし方</span>
+                <h3 id="q-text" class="text-xl sm:text-2xl font-extrabold text-slate-800 leading-snug">
+                    待ちに待った2連休！ふたりの理想の過ごし方は？
+                </h3>
+            </div>
+
+            <!-- Options List -->
+            <div id="q-options" class="space-y-3 mt-6">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+
+        <!-- Screen 3: Handover to Player 2 -->
+        <section id="screen-handover" class="hidden glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-pink-900/5 text-center">
+            <div class="w-20 h-20 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center mx-auto mb-4 animate-float">
+                <i data-lucide="smartphone" class="w-10 h-10"></i>
+            </div>
+            <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 font-bold text-xs">
+                ✓ <span class="p1-name-display">あなた</span>の回答が完了しました！
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-4 mb-2">
+                次は <span class="p2-name-display text-violet-600 underline decoration-wavy decoration-violet-300">パートナー</span> さんの番です
+            </h2>
+            <p class="text-sm text-slate-600 mb-6">
+                端末をお相手に渡すか、お相手がどう答えるか想像しながら<br>同じ <span id="handover-q-count" class="font-bold text-violet-600">6</span> つの質問に回答してください！
+            </p>
+            <div class="bg-violet-50/80 border border-violet-100 rounded-2xl p-4 mb-6 text-xs text-violet-800 font-medium">
+                🔒 前のプレイヤーの回答は秘密にされています。直感で選んでみましょう！
+            </div>
+            <button onclick="startPlayer2Quiz()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-extrabold text-lg shadow-lg shadow-violet-500/25 hover:opacity-95 transition flex items-center justify-center gap-2">
+                <span>準備OK！回答を始める</span>
+                <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+            </button>
+        </section>
+
+        <!-- Screen 4: Loading AI Analysis -->
+        <section id="screen-loading" class="hidden glass-card rounded-3xl p-8 sm:p-12 shadow-xl shadow-pink-900/5 text-center">
+            <div class="relative w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full bg-pink-200 animate-ping opacity-40"></div>
+                <div class="relative w-20 h-20 rounded-full bg-gradient-to-tr from-pink-500 to-violet-500 text-white flex items-center justify-center shadow-lg animate-heart">
+                    <i data-lucide="heart" class="w-10 h-10 fill-current"></i>
+                </div>
+            </div>
+            <h3 class="text-xl sm:text-2xl font-extrabold text-slate-800 mb-2">AIがふたりの波長を解析中...</h3>
+            <p id="loading-subtext" class="text-sm text-slate-500 animate-pulse">回答のシンクロ率と補完バランスを計算しています</p>
+
+            <div class="mt-8 space-y-2 max-w-xs mx-auto text-left text-xs text-slate-500 bg-white/60 p-4 rounded-2xl">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-green-500"></i>
+                    <span id="loading-q-count-text">価値観データを照合</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="loader-2" class="w-4 h-4 text-pink-500 animate-spin"></i>
+                    <span>ふたりのケミストリーと相性度を算出中</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-violet-500"></i>
+                    <span>ぴったりのデート＆会話テーマを生成中</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Screen 5: Results -->
+        <section id="screen-result" class="hidden space-y-5">
+            <!-- Main Score Card -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-xl shadow-pink-900/5 relative overflow-hidden">
+                <div class="text-center">
+                    <span id="res-relation-badge" class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-pink-100 text-pink-700 mb-2">
+                        恋人・カップル診断結果
+                    </span>
+                    <h2 class="text-lg font-bold text-slate-600">
+                        <span class="p1-name-display text-pink-600 font-extrabold">あなた</span> ＆ <span class="p2-name-display text-violet-600 font-extrabold">パートナー</span>
+                    </h2>
+
+                    <!-- Catchphrase / Type -->
+                    <div class="my-4">
+                        <p class="text-xs font-bold text-slate-400 tracking-widest uppercase">AIが名付けたふたりの関係</p>
+                        <h3 id="res-title" class="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-pink-600 via-rose-500 to-violet-600 bg-clip-text text-transparent mt-1">
+                            最高のケミストリーコンビ
+                        </h3>
+                    </div>
+
+                    <!-- Circular Score Meter -->
+                    <div class="relative w-44 h-44 mx-auto my-6 flex items-center justify-center">
+                        <svg class="w-full h-full -rotate-90 transform" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="52" stroke="#f1f5f9" stroke-width="10" fill="none" />
+                            <circle id="score-circle" cx="60" cy="60" r="52" stroke="url(#grad)" stroke-width="10"
+                                stroke-dasharray="326.7" stroke-dashoffset="326.7" stroke-linecap="round" fill="none"
+                                class="transition-all duration-1000 ease-out" />
+                            <defs>
+                                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#ec4899" />
+                                    <stop offset="100%" stop-color="#8b5cf6" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-xs font-bold text-slate-400">トータル相性度</span>
+                            <div class="flex items-baseline">
+                                <span id="res-score" class="text-5xl font-extrabold text-slate-800">0</span>
+                                <span class="text-xl font-bold text-pink-500 ml-0.5">%</span>
+                            </div>
+                            <span id="res-match-count" class="text-[11px] font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-full mt-1">
+                                6問中 3問ぴったり一致！
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Main Analysis Text -->
+                    <div class="bg-white/80 rounded-2xl p-5 text-left border border-pink-100 shadow-sm">
+                        <div class="flex items-center gap-2 text-sm font-extrabold text-pink-600 mb-2">
+                            <i data-lucide="bot" class="w-5 h-5"></i>
+                            <span>AI相性アナリストの総評</span>
+                        </div>
+                        <p id="res-analysis" class="text-sm text-slate-700 leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Generated Couple Illustration Card -->
+            <div class="glass-card rounded-3xl p-6 shadow-xl shadow-pink-900/5 overflow-hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2 font-extrabold text-base text-slate-800">
+                        <span class="w-8 h-8 rounded-xl bg-gradient-to-tr from-pink-500 to-violet-500 text-white flex items-center justify-center shadow-sm">
+                            <i data-lucide="palette" class="w-4 h-4"></i>
+                        </span>
+                        <span>ふたりの相性イメージアート＆波形</span>
+                    </div>
+                    <button id="regen-img-btn" onclick="regenerateCoupleImage()" class="text-xs font-bold text-violet-600 bg-violet-50 hover:bg-violet-100 px-3 py-1.5 rounded-full transition flex items-center gap-1">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>テイスト変更</span>
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500 mb-4">診断された称号と回答のシンクロ傾向をもとに生成した、ふたりだけのオリジナル相性アートカードです。</p>
+
+                <!-- Generated Artwork Display (Always succeeds via custom SVG art generator) -->
+                <div id="img-result-box">
+                    <div id="couple-art-container" class="relative max-w-sm mx-auto rounded-2xl overflow-hidden shadow-lg border-4 border-white bg-white">
+                        <!-- Populated dynamically with custom SVG illustration -->
+                    </div>
+                    <p id="img-caption" class="text-center text-xs font-bold text-slate-500 mt-2.5"></p>
+                </div>
+            </div>
+
+            <!-- Advice & Mission Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="glass-card rounded-3xl p-5 shadow-lg shadow-pink-900/5 border-l-4 border-l-pink-500">
+                    <div class="flex items-center gap-2 font-extrabold text-sm text-slate-800 mb-2">
+                        <span class="w-7 h-7 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center">
+                            <i data-lucide="flame" class="w-4 h-4"></i>
+                        </span>
+                        <span>ふたりの強み・魅力</span>
+                    </div>
+                    <p id="res-strength" class="text-xs sm:text-sm text-slate-600 leading-relaxed"></p>
+                </div>
+
+                <div class="glass-card rounded-3xl p-5 shadow-lg shadow-pink-900/5 border-l-4 border-l-violet-500">
+                    <div class="flex items-center gap-2 font-extrabold text-sm text-slate-800 mb-2">
+                        <span class="w-7 h-7 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center">
+                            <i data-lucide="compass" class="w-4 h-4"></i>
+                        </span>
+                        <span>さらに仲を深める秘訣</span>
+                    </div>
+                    <p id="res-tip" class="text-xs sm:text-sm text-slate-600 leading-relaxed"></p>
+                </div>
+            </div>
+
+            <!-- Date Idea Card -->
+            <div class="glass-card rounded-3xl p-6 shadow-lg shadow-pink-900/5 bg-gradient-to-br from-white/90 to-pink-50/80">
+                <div class="flex items-center gap-2.5 font-extrabold text-base text-slate-800 mb-2">
+                    <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                        <i data-lucide="calendar-heart" class="w-5 h-5"></i>
+                    </span>
+                    <span>AIおすすめ！次回の特別デート＆過ごし方</span>
+                </div>
+                <p id="res-date" class="text-sm text-slate-700 leading-relaxed pl-1"></p>
+            </div>
+
+            <!-- Answer Comparison Accordion -->
+            <div class="glass-card rounded-3xl p-6 shadow-lg shadow-pink-900/5">
+                <h4 class="font-extrabold text-base text-slate-800 mb-4 flex items-center gap-2">
+                    <i data-lucide="git-compare" class="w-5 h-5 text-violet-500"></i>
+                    <span>ふたりの回答答え合わせ</span>
+                </h4>
+                <div id="comparison-list" class="space-y-3">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Interactive Extra AI Question Box -->
+            <div class="glass-card rounded-3xl p-6 shadow-lg shadow-pink-900/5 border border-violet-200">
+                <h4 class="font-extrabold text-base text-slate-800 mb-1 flex items-center gap-2">
+                    <i data-lucide="message-circle-heart" class="w-5 h-5 text-pink-500"></i>
+                    <span>AIにふたりの相談をしてみる</span>
+                </h4>
+                <p class="text-xs text-slate-500 mb-4">診断結果をもとに、AIへ追加で聞いてみたいことをボタンを押すか自由に入力してください。</p>
+                
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <button onclick="askFollowUp('ふたりで盛り上がれる面白い会話ネタを3つ教えて！')" class="text-xs bg-white hover:bg-pink-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-full font-medium transition">
+                        💬 盛り上がる会話ネタ3選
+                    </button>
+                    <button onclick="askFollowUp('もし意見が食い違った時の、ふたりらしい仲直りルールを作って！')" class="text-xs bg-white hover:bg-pink-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-full font-medium transition">
+                        🤝 平和な仲直りルール
+                    </button>
+                    <button onclick="askFollowUp('ふたりで一緒に挑戦すると楽しい共同プロジェクトや趣味は？')" class="text-xs bg-white hover:bg-pink-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-full font-medium transition">
+                        🎮 おすすめの共通の趣味
+                    </button>
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="text" id="custom-question" placeholder="例: 来月の記念日に何したらいい？" 
+                        onkeydown="if(event.key === 'Enter') askCustomFollowUp()"
+                        class="flex-1 bg-white px-4 py-2.5 rounded-xl text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <button onclick="askCustomFollowUp()" id="ask-btn" class="px-4 py-2.5 rounded-xl bg-slate-800 text-white text-sm font-bold hover:bg-slate-700 transition shrink-0 flex items-center gap-1">
+                        <span>質問</span>
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+
+                <div id="followup-response-box" class="hidden mt-4 p-4 rounded-2xl bg-violet-50/80 border border-violet-100 text-sm text-slate-700 leading-relaxed whitespace-pre-line">
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                <button onclick="copyResult()" class="flex-1 py-3.5 px-5 rounded-2xl bg-white text-slate-700 font-bold text-sm border border-slate-200 shadow-sm hover:bg-slate-50 transition flex items-center justify-center gap-2">
+                    <i data-lucide="copy" class="w-4 h-4"></i>
+                    <span id="copy-btn-text">診断結果をコピーしてシェア</span>
+                </button>
+                <button onclick="resetApp()" class="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-pink-500 to-violet-600 text-white font-bold text-sm shadow-md hover:opacity-95 transition flex items-center justify-center gap-2">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    <span>もう一度診断する</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-xl w-full mx-auto text-center py-4 text-xs text-slate-400">
+        Powered by Gemini AI • ふたりの絆を深めるコミュニケーションツール
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-2xl bg-slate-900/90 text-white text-xs font-bold shadow-xl transition-all duration-300 opacity-0 pointer-events-none translate-y-2 flex items-center gap-2 z-50">
+        <i data-lucide="check-circle" class="w-4 h-4 text-green-400"></i>
+        <span id="toast-msg">クリップボードにコピーしました！</span>
+    </div>
+
+    <script>
+        // --- Gemini API Configuration ---
+        const apiKey = ""; // Canvas runtime injects the API key automatically
+
+        // --- Theme Details ---
+        const themeMeta = {
+            standard: { name: "王道バランス診断", badge: "🌟 王道バランス" },
+            romance: { name: "ディープな恋愛観コース", badge: "💘 恋愛観コース" },
+            marriage: { name: "結婚・同棲ライフコース", badge: "🏡 結婚・生活コース" },
+            travel: { name: "旅行＆お出かけコース", badge: "✈️ 旅行スタイルコース" }
+        };
+
+        // --- Question Banks by Theme (10 Questions Each) ---
+        const questionBanks = {
+            standard: [
+                {
+                    id: 1, category: "休日のスタイル", emoji: "🏖️",
+                    text: "待ちに待った2連休！ふたりの理想の過ごし方は？",
+                    options: [
+                        { id: "A", icon: "🚗", label: "話題のスポットや少し遠くへお出かけ・旅行！" },
+                        { id: "B", icon: "🛋️", label: "お家で映画やゲーム、美味しい出前でまったりゴロゴロ" },
+                        { id: "C", icon: "☕", label: "昼までぐっすり寝て、近所のおしゃれなカフェを散策" },
+                        { id: "D", icon: "👟", label: "お互いの趣味の時間も楽しみつつ、夜に美味しいご飯で合流" }
+                    ]
+                },
+                {
+                    id: 2, category: "ピンチへの対応", emoji: "🗺️",
+                    text: "楽しみにしていたお店がまさかの臨時休業！どうする？",
+                    options: [
+                        { id: "A", icon: "📱", label: "すぐにスマホで近くの高評価なお店を徹底リサーチ！" },
+                        { id: "B", icon: "🚶", label: "「これも運命！」と歩きながら気になったお店に飛び込む" },
+                        { id: "C", icon: "🍰", label: "とりあえずコンビニやカフェで甘いものを食べて作戦会議" },
+                        { id: "D", icon: "🛒", label: "デパ地下やスーパーで豪華な食材を買ってお家パーティーに変更！" }
+                    ]
+                },
+                {
+                    id: 3, category: "愛情・感謝の表現", emoji: "💝",
+                    text: "パートナーからされて一番「愛されてるな〜」と感じるのは？",
+                    options: [
+                        { id: "A", icon: "💬", label: "「好き」「いつもありがとう」と言葉でストレートに伝えてくれる" },
+                        { id: "B", icon: "🎁", label: "前に何気なく言った欲しいものや好物を覚えていてくれる" },
+                        { id: "C", icon: "🤝", label: "忙しい時でも自分と過ごす時間やスキンシップを大切にしてくれる" },
+                        { id: "D", icon: "🧹", label: "疲れている時に家事を手伝ったり、そっとサポートしてくれる" }
+                    ]
+                },
+                {
+                    id: 4, category: "仲直りのスタイル", emoji: "🌧️",
+                    text: "ちょっとしたことで意見がぶつかり、微妙な空気に…どうしたい？",
+                    options: [
+                        { id: "A", icon: "🗣️", label: "モヤモヤを残したくないので、その場ですぐに話し合って解決したい" },
+                        { id: "B", icon: "🍵", label: "お互いに少しクールダウンする時間を置いてから冷静に話したい" },
+                        { id: "C", icon: "🍮", label: "美味しいスイーツやご飯を一緒に食べて、自然と空気を和ませたい" },
+                        { id: "D", icon: "✉️", label: "直接だと素直になれないので、LINEや手紙で気持ちを伝えたい" }
+                    ]
+                },
+                {
+                    id: 5, category: "金銭感覚・ご褒美", emoji: "💎",
+                    text: "ふたりに臨時収入3万円が！一緒に使うなら何に使う？",
+                    options: [
+                        { id: "A", icon: "🥩", label: "普段は行けない高級レストランで贅沢ディナー！" },
+                        { id: "B", icon: "♨️", label: "日帰り温泉やテーマパークなど、思い出に残る体験・レジャー" },
+                        { id: "C", icon: "🍳", label: "ペアグッズや便利な家電など、形に残るものを買う" },
+                        { id: "D", icon: "🐷", label: "次の大きな旅行や将来のために「ふたりの貯金箱」へ！" }
+                    ]
+                },
+                {
+                    id: 6, category: "理想の距離感", emoji: "🌙",
+                    text: "ふたりにとって一番心地よい「普段の距離感」はどれに近い？",
+                    options: [
+                        { id: "A", icon: "🐣", label: "どんな小さな出来事も毎日シェアして、いつも一緒にいたい！" },
+                        { id: "B", icon: "🐈", label: "同じ空間にいつつも、別々のことをして静かに過ごせる関係" },
+                        { id: "C", icon: "🦅", label: "普段はそれぞれの仕事や趣味に集中し、会う時に全力で楽しむ" },
+                        { id: "D", icon: "🦊", label: "親友みたいにいつでも冗談を言い合って笑い合える関係" }
+                    ]
+                },
+                {
+                    id: 7, category: "サプライズ観", emoji: "🎂",
+                    text: "誕生日や記念日のプレゼント、一番嬉しいスタイルは？",
+                    options: [
+                        { id: "A", icon: "🎉", label: "当日まで完全に秘密！あっと驚くサプライズ演出" },
+                        { id: "B", icon: "🛍️", label: "一緒に買い物に行って、本当に欲しいものをふたりで選びたい" },
+                        { id: "C", icon: "💐", label: "手紙や花束など、気持ちがこもったシンプルな贈り物" },
+                        { id: "D", icon: "🥂", label: "モノよりも、素敵なホテルや特別なディナーの体験" }
+                    ]
+                },
+                {
+                    id: 8, category: "落ち込んだ時", emoji: "🩹",
+                    text: "仕事やプライベートでヘコんでいる時、相手にしてほしいことは？",
+                    options: [
+                        { id: "A", icon: "👂", label: "アドバイスはせず「大変だったね」とただじっくり話を聞いてほしい" },
+                        { id: "B", icon: "💡", label: "解決策やポジティブな視点を一緒に考えて励ましてほしい" },
+                        { id: "C", icon: "🎢", label: "パーッと明るい場所へ連れ出して、嫌なことを忘れさせてほしい" },
+                        { id: "D", icon: "🛌", label: "元気が出るまでそっとしておいて、優しく見守ってほしい" }
+                    ]
+                },
+                {
+                    id: 9, category: "連絡のペース", emoji: "📱",
+                    text: "会えない日のLINEや電話、理想のペースは？",
+                    options: [
+                        { id: "A", icon: "💬", label: "おはようからおやすみまで、隙間時間にこまめにやり取りしたい" },
+                        { id: "B", icon: "🌙", label: "夜に1回、その日あったことをまとめて報告し合えれば十分" },
+                        { id: "C", icon: "📞", label: "文字を打つより、寝る前に5分でも声を聞く通話がしたい" },
+                        { id: "D", icon: "📅", label: "用事がある時や次に会う約束をする時だけでマイペースでOK" }
+                    ]
+                },
+                {
+                    id: 10, category: "未来のビジョン", emoji: "🌈",
+                    text: "10年後のふたり、どんな関係になっていたい？",
+                    options: [
+                        { id: "A", icon: "🔥", label: "いつまでも出会った頃のようにドキドキ・ラブラブなふたり" },
+                        { id: "B", icon: "🍵", label: "空気のように自然体で、無言でも一番落ち着く深い絆のふたり" },
+                        { id: "C", icon: "🚀", label: "新しい趣味や旅にどんどん挑戦し続けるアクティブな相棒" },
+                        { id: "D", icon: "🏡", label: "温かい家庭や居場所を築いて、穏やかな日常を噛みしめるふたり" }
+                    ]
+                }
+            ],
+            romance: [
+                {
+                    id: 1, category: "恋の始まり", emoji: "💘",
+                    text: "恋愛において「好きになる瞬間」として一番多いのは？",
+                    options: [
+                        { id: "A", icon: "⚡", label: "出会った瞬間の直感や、笑顔・雰囲気への一目惚れ！" },
+                        { id: "B", icon: "☕", label: "何度も話して価値観や居心地の良さを知ってからじわじわ好きになる" },
+                        { id: "C", icon: "🎭", label: "普段見せない頼もしさや可愛らしさなど「ギャップ」を見た瞬間" },
+                        { id: "D", icon: "🌸", label: "相手から好意を向けられたり、優しくされたことで意識し始める" }
+                    ]
+                },
+                {
+                    id: 2, category: "スキンシップ", emoji: "🫶",
+                    text: "お出かけ中の手つなぎやスキンシップ、理想はどれ？",
+                    options: [
+                        { id: "A", icon: "👫", label: "外でも自然に手をつないだり、いつも近くにくっついていたい" },
+                        { id: "B", icon: "🏠", label: "外では少し照れるので、ふたりきりの空間でたっぷり甘えたい" },
+                        { id: "C", icon: "👀", label: "人前では控えめに、時々目が合って微笑み合うくらいが粋" },
+                        { id: "D", icon: "🔄", label: "その日の気分やロマンチックなムードに合わせて自然に" }
+                    ]
+                },
+                {
+                    id: 3, category: "ヤキモチ・嫉妬", emoji: "🦊",
+                    text: "パートナーが異性の友達や同僚と仲良くしていたらどう思う？",
+                    options: [
+                        { id: "A", icon: "😤", label: "正直ちょっとヤキモチを焼くし、「可愛く拗ねて」アピールする" },
+                        { id: "B", icon: "📝", label: "事前に「誰と行くか」さえ教えてくれれば信頼して送り出す" },
+                        { id: "C", icon: "😎", label: "交友関係は自由！自分も自分の時間を楽しむので全く気にならない" },
+                        { id: "D", icon: "🤫", label: "内心モヤッとするけど、器の小さい人と思われたくなくて我慢する" }
+                    ]
+                },
+                {
+                    id: 4, category: "言葉の愛情表現", emoji: "💌",
+                    text: "「好き」「愛してる」などの言葉、どれくらいの頻度で言いたい・言われたい？",
+                    options: [
+                        { id: "A", icon: "🗓️", label: "毎日でも伝え合いたい！言葉にしないと不安になる" },
+                        { id: "B", icon: "✨", label: "デートの帰り際やふとした瞬間に、週に数回ストレートに" },
+                        { id: "C", icon: "🎁", label: "記念日や特別な日に、ここぞという場面で言われるからこそ響く" },
+                        { id: "D", icon: "🤝", label: "言葉よりも行動や態度で伝わっていれば十分安心できる" }
+                    ]
+                },
+                {
+                    id: 5, category: "デートの主導権", emoji: "👑",
+                    text: "デートのお店選びやプラン決め、理想のバランスは？",
+                    options: [
+                        { id: "A", icon: "🧭", label: "自分がリサーチして相手を喜ばせるプランをリードしたい" },
+                        { id: "B", icon: "🎀", label: "相手にスマートにエスコート・提案してもらえるとキュンとする" },
+                        { id: "C", icon: "🗣️", label: "「どこ行く？」と最初から最後までふたりで一緒に相談して決めたい" },
+                        { id: "D", icon: "🎲", label: "得意なジャンル（カフェ担当、ドライブ担当など）で役割分担したい" }
+                    ]
+                },
+                {
+                    id: 6, category: "甘え方・頼り方", emoji: "🐱",
+                    text: "パートナーとの間で、あなたは甘える派？甘えられたい派？",
+                    options: [
+                        { id: "A", icon: "🍼", label: "断然「甘えたい派」！よしよしと包み込んでほしい" },
+                        { id: "B", icon: "🛡️", label: "断然「甘えられたい派」！頼られると張り切ってしまう" },
+                        { id: "C", icon: "⚖️", label: "普段はしっかり者だけど、ふたりきりの時だけ交代で甘え合いたい" },
+                        { id: "D", icon: "🤝", label: "お互いに自立した対等なパートナーとして支え合いたい" }
+                    ]
+                },
+                {
+                    id: 7, category: "記念日のこだわり", emoji: "🥂",
+                    text: "付き合った記念日やイベント（クリスマス等）への熱量は？",
+                    options: [
+                        { id: "A", icon: "🌹", label: "1ヶ月記念日や毎年のイベントも絶対に欠かさずロマンチックに祝いたい" },
+                        { id: "B", icon: "🎂", label: "1年ごとの記念日と誕生日だけは、特別なお店でお祝いしたい" },
+                        { id: "C", icon: "🍰", label: "ケーキを買ってお家で乾杯するくらいの気取らないお祝いが好き" },
+                        { id: "D", icon: "🌿", label: "特定の日よりも、普段の何気ない日常を大切にする方が好き" }
+                    ]
+                },
+                {
+                    id: 8, category: "過去の恋愛・秘密", emoji: "🗝️",
+                    text: "お互いの過去の恋愛やスマホの中身など、どこまでオープンにしたい？",
+                    options: [
+                        { id: "A", icon: "📖", label: "隠し事はゼロがいい！過去もスマホもすべてオープンにできる関係" },
+                        { id: "B", icon: "🌸", label: "今が大事なので、過去の恋愛話はあえて聞かない・話さない方がいい" },
+                        { id: "C", icon: "🔒", label: "信頼しているからこそ、お互いのプライバシーや秘密の領域は尊重したい" },
+                        { id: "D", icon: "😆", label: "笑い話にできるエピソードなら楽しくシェアしたい" }
+                    ]
+                },
+                {
+                    id: 9, category: "電話・連絡のタイミング", emoji: "🌙",
+                    text: "夜に「ちょっと声が聞きたいな」と思った時どうする？",
+                    options: [
+                        { id: "A", icon: "📞", label: "思い立ったらすぐに電話をかけちゃう！（相手にもかけてほしい）" },
+                        { id: "B", icon: "💬", label: "「今電話できる？」と一度LINEで聞いてから通話する" },
+                        { id: "C", icon: "⏰", label: "お互いの負担にならないよう、決まった時間や週末にゆっくり話す" },
+                        { id: "D", icon: "🏃", label: "電話するくらいなら「今から少し会おう！」と会いに行きたい" }
+                    ]
+                },
+                {
+                    id: 10, category: "恋のスパイス", emoji: "✨",
+                    text: "長く付き合ってもマンネリ知らずでいるために一番大切だと思うことは？",
+                    options: [
+                        { id: "A", icon: "👗", label: "いつまでも異性として見られるよう、身だしなみや自分磨きを怠らない" },
+                        { id: "B", icon: "🗺️", label: "行ったことのない場所や新しい体験をふたりでアップデートし続ける" },
+                        { id: "C", icon: "🙏", label: "親しき仲にも礼儀あり！「ありがとう」「ごめんね」を絶対に忘れない" },
+                        { id: "D", icon: "🎨", label: "お互いに一人の時間や友達との世界を持ち、新鮮な話題を持ち帰る" }
+                    ]
+                }
+            ],
+            marriage: [
+                {
+                    id: 1, category: "家事の分担", emoji: "🧹",
+                    text: "一緒に暮らすなら、料理や掃除などの家事はどう分担したい？",
+                    options: [
+                        { id: "A", icon: "📋", label: "「料理担当」「掃除担当」など、得意・不得意で明確に役割を決めたい" },
+                        { id: "B", icon: "⏰", label: "決まった分担は作らず、その日余裕がある方が気づいた時にやる" },
+                        { id: "C", icon: "🍳", label: "休日にふたりで音楽でもかけながら、一緒に料理や掃除を楽しみたい" },
+                        { id: "D", icon: "🤖", label: "食洗機やロボット掃除機など、最新家電に投資して家事自体を減らす！" }
+                    ]
+                },
+                {
+                    id: 2, category: "お金の管理", emoji: "💰",
+                    text: "ふたりの生活費や将来に向けた貯金、理想の管理方法は？",
+                    options: [
+                        { id: "A", icon: "🏦", label: "共通の口座や財布を作り、毎月決まった額を入れてやりくりする" },
+                        { id: "B", icon: "📊", label: "「家賃はこっち、食費はあっち」と費目ごとに担当を分ける" },
+                        { id: "C", icon: "💎", label: "収入をすべてひとつにまとめ、お互いに毎月お小遣い制にする" },
+                        { id: "D", icon: "📱", label: "家計簿アプリで共有しつつ、その都度きっちり割り勘・精算する" }
+                    ]
+                },
+                {
+                    id: 3, category: "毎日の食卓", emoji: "🍚",
+                    text: "普段の平日の夜ご飯、どんなスタイルが理想？",
+                    options: [
+                        { id: "A", icon: "🍲", label: "なるべく自炊して、温かい手料理をふたりで囲みたい" },
+                        { id: "B", icon: "🍱", label: "平日は無理せずお惣菜や冷凍・外食もフル活用して時短したい" },
+                        { id: "C", icon: "🍻", label: "時間が合わなくても、晩酌やお茶の時間だけは一緒に取りたい" },
+                        { id: "D", icon: "🥗", label: "食べたいものや帰る時間が違えば、各自で自由に食べる日があってOK" }
+                    ]
+                },
+                {
+                    id: 4, category: "住まいのこだわり", emoji: "🏡",
+                    text: "ふたりで住む家を選ぶなら、一番譲れないポイントは？",
+                    options: [
+                        { id: "A", icon: "🚃", label: "駅チカ・通勤のしやすさ・周辺の買い物環境などの「利便性」" },
+                        { id: "B", icon: "🛋️", label: "日当たりの良さや、広いリビング・きれいなキッチンなどの「設備」" },
+                        { id: "C", icon: "🚪", label: "お互いの一人時間も確保できる「部屋数（それぞれの個室）」" },
+                        { id: "D", icon: "🌳", label: "静かで治安が良く、自然や公園が近くにある「周辺環境」" }
+                    ]
+                },
+                {
+                    id: 5, category: "睡眠と生活リズム", emoji: "🛌",
+                    text: "寝る時間や寝室のスタイルについて、本音に近いのは？",
+                    options: [
+                        { id: "A", icon: "🌙", label: "毎日同じベッド・同じタイミングで一緒におしゃべりしてから寝たい" },
+                        { id: "B", icon: "🛏️", label: "同じ寝室がいいけれど、ぐっすり眠れるようにベッド（布団）は別々にしたい" },
+                        { id: "C", icon: "🚪", label: "いびきや生活リズムの違いを気にせず済むよう、寝室自体を分けたい" },
+                        { id: "D", icon: "📅", label: "平日はそれぞれのペースで寝て、休前日だけ一緒に夜更かししたい" }
+                    ]
+                },
+                {
+                    id: 6, category: "お買い物の判断基準", emoji: "🛒",
+                    text: "家具や家電、日用品を買う時、何を一番重視する？",
+                    options: [
+                        { id: "A", icon: "✨", label: "インテリアの統一感やおしゃれさ！多少高くても気に入ったデザイン" },
+                        { id: "B", icon: "⚙️", label: "機能性やスペック・口コミを徹底比較して一番実用的なもの" },
+                        { id: "C", icon: "🏷️", label: "コスパ第一！セールやポイント還元を狙ってお得に買いたい" },
+                        { id: "D", icon: "🙌", label: "こだわりがある方の意見に気持ちよくお任せしたい" }
+                    ]
+                },
+                {
+                    id: 7, category: "部屋のきれいさ", emoji: "✨",
+                    text: "部屋の片付けや掃除に対する感覚、どれが一番近い？",
+                    options: [
+                        { id: "A", icon: "🧼", label: "常にホテルのように物が少なく、スッキリ片付いた状態を保ちたい" },
+                        { id: "B", icon: "🧸", label: "多少生活感や趣味の物が並んでいる方が、落ち着いてリラックスできる" },
+                        { id: "C", icon: "🧹", label: "平日は少し散らかっても目をつぶり、週末にまとめてリセットすればOK" },
+                        { id: "D", icon: "🚿", label: "水回り（お風呂・トイレ・キッチン）さえ清潔なら他は大らかでいい" }
+                    ]
+                },
+                {
+                    id: 8, category: "休日の朝", emoji: "☀️",
+                    text: "同棲・結婚後の日曜日の朝、どんな風に始まるのが幸せ？",
+                    options: [
+                        { id: "A", icon: "🥞", label: "早起きして美味しいコーヒーと朝食を作り、爽やかに一日をスタート" },
+                        { id: "B", icon: "😴", label: "アラームをかけずに昼前まで一緒にゴロゴロ寝坊する至福の時間" },
+                        { id: "C", icon: "🏃", label: "先に起きた方が静かに趣味や散歩を楽しみ、起きたらブランチへ" },
+                        { id: "D", icon: "🧹", label: "午前中にふたりでチャチャッと掃除・洗濯を済ませてから遊びに行く" }
+                    ]
+                },
+                {
+                    id: 9, category: "実家や友人との付き合い", emoji: "🥂",
+                    text: "お互いの家族（実家）や友人グループとの関わり方は？",
+                    options: [
+                        { id: "A", icon: "🎉", label: "ホームパーティーや帰省など、家族や友達も交えてみんなで仲良くしたい" },
+                        { id: "B", icon: "🎌", label: "盆暮れ正月やイベントなど、節目の挨拶を丁寧にこなす程よい距離感" },
+                        { id: "C", icon: "🕊️", label: "基本はふたりの生活を最優先し、実家や友人付き合いは各自で自由に" },
+                        { id: "D", icon: "💬", label: "何かあればいつでも相談し合える、風通しの良い関係を築きたい" }
+                    ]
+                },
+                {
+                    id: 10, category: "家庭のルール", emoji: "🏠",
+                    text: "ずっと仲良く暮らし続けるために「これだけは守りたい習慣」は？",
+                    options: [
+                        { id: "A", icon: "👋", label: "「いってきます」「おかえり」「ありがとう」の挨拶を毎日欠かさない" },
+                        { id: "B", icon: "🍵", label: "週に1回はスマホを置いて、ふたりの近況や将来を話すお茶タイムを作る" },
+                        { id: "C", icon: "🎁", label: "記念日や誕生日は、何年経っても恋人時代のようにデートをする" },
+                        { id: "D", icon: "🌿", label: "お互いに干渉しすぎず、相手の趣味や一人の時間を尊重する" }
+                    ]
+                }
+            ],
+            travel: [
+                {
+                    id: 1, category: "旅の計画スタイル", emoji: "🗺️",
+                    text: "ふたりで2泊3日の旅行へ！計画はどうやって立てる？",
+                    options: [
+                        { id: "A", icon: "📒", label: "移動時間や予約までバッチリ調べた「旅のしおり」を作って楽しみたい" },
+                        { id: "B", icon: "📍", label: "宿と絶対行きたいメインの1〜2ヶ所だけ決めて、あとは現地で自由行動" },
+                        { id: "C", icon: "🎲", label: "ノープランで出発！その日の天気と気分で行き先を決める気ままな旅" },
+                        { id: "D", icon: "🔍", label: "ふたりでSNSやガイドブックを見ながら「あれ食べたいね」と語る時間が好き" }
+                    ]
+                },
+                {
+                    id: 2, category: "宿泊先のこだわり", emoji: "🏨",
+                    text: "旅行の宿選び、一番テンションが上がるのはどこ？",
+                    options: [
+                        { id: "A", icon: "♨️", label: "露天風呂と豪華な会席料理がついた、おこもり系の温泉旅館" },
+                        { id: "B", icon: "🌆", label: "夜景がきれいでラウンジや朝食ビュッフェが充実したシティホテル" },
+                        { id: "C", icon: "⛺", label: "グランピングや古民家・コテージなど、非日常が味わえるユニークな宿" },
+                        { id: "D", icon: "🎒", label: "宿は清潔で寝られればコスパ重視！その分グルメや観光に予算を使いたい" }
+                    ]
+                },
+                {
+                    id: 3, category: "現地でのグルメ", emoji: "🍽️",
+                    text: "旅先での食事、どんな楽しみ方が一番好き？",
+                    options: [
+                        { id: "A", icon: "🦀", label: "その土地でしか食べられない名物料理や老舗の名店を予約して堪能！" },
+                        { id: "B", icon: "🍡", label: "市場や商店街、屋台などで気になったものを少しずつ食べ歩き！" },
+                        { id: "C", icon: "🍶", label: "地元の人が通う渋い居酒屋やバルにふらっと入って乾杯したい" },
+                        { id: "D", icon: "🥞", label: "景色のいいテラスカフェやおしゃれなご当地スイーツ巡り！" }
+                    ]
+                },
+                {
+                    id: 4, category: "移動時間の過ごし方", emoji: "🚅",
+                    text: "新幹線や長距離ドライブなど、移動中はどう過ごしたい？",
+                    options: [
+                        { id: "A", icon: "🎵", label: "好きな音楽プレイリストを流して、おしゃべりやカラオケ状態で盛り上がる" },
+                        { id: "B", icon: "🍱", label: "駅弁やご当地おやつを買い込んで、景色を見ながらモグモグタイム" },
+                        { id: "C", icon: "😴", label: "現地で全力で遊ぶために、移動中は肩を寄せ合ってぐっすり睡眠チャージ" },
+                        { id: "D", icon: "📱", label: "次の目的地のルートや周辺スポットをふたりでワクワク検索" }
+                    ]
+                },
+                {
+                    id: 5, category: "旅のペース配分", emoji: "👟",
+                    text: "旅行中の1日のスケジュール感、理想はどれ？",
+                    options: [
+                        { id: "A", icon: "🌅", label: "朝から晩まで名所をたくさん回って、遊び尽くすアクティブ派！" },
+                        { id: "B", icon: "🌿", label: "チェックアウトはゆっくり、1日1〜2ヶ所を余裕をもって巡る癒やし派" },
+                        { id: "C", icon: "🏖️", label: "観光は最小限にして、ホテルやビーチ・温泉で何もしない贅沢を味わう" },
+                        { id: "D", icon: "⚖️", label: "1日目はアクティブに観光し、2日目はゆっくり休むメリハリ派" }
+                    ]
+                },
+                {
+                    id: 6, category: "旅のトラブル対応", emoji: "☔",
+                    text: "旅行当日、まさかの大雨や渋滞で予定が狂ってしまったら？",
+                    options: [
+                        { id: "A", icon: "🏛️", label: "すぐさま屋内施設（水族館・美術館・スパなど）の代替プランに切り替える" },
+                        { id: "B", icon: "♨️", label: "「早く宿に入ってゆっくりしよう！」と宿での滞在時間を満喫する" },
+                        { id: "C", icon: "☂️", label: "お揃いの傘やレインコートを買って、雨ならではの雰囲気を面白がる" },
+                        { id: "D", icon: "☕", label: "素敵なお店に入って、雨が止むまで美味しいものでも食べてのんびり待つ" }
+                    ]
+                },
+                {
+                    id: 7, category: "写真・思い出の残し方", emoji: "📸",
+                    text: "旅先での写真や動画、どうやって残したい？",
+                    options: [
+                        { id: "A", icon: "🤳", label: "行く先々でふたりのツーショットや映える写真をたくさん撮りたい！" },
+                        { id: "B", icon: "🏞️", label: "お互いの自然な表情や、きれいな風景・料理を中心にスナップ撮影" },
+                        { id: "C", icon: "🎬", label: "短い動画を少しずつ撮って、あとで1本の思い出ムービーにまとめたい" },
+                        { id: "D", icon: "👀", label: "写真は最低限の記念撮影だけで、自分の目と心にしっかり焼き付けたい" }
+                    ]
+                },
+                {
+                    id: 8, category: "お土産・ショッピング", emoji: "🎁",
+                    text: "旅先でのお土産選び、どんなスタイル？",
+                    options: [
+                        { id: "A", icon: "🛍️", label: "道の駅やご当地ショップが大好き！時間をとって隅々まで見たい" },
+                        { id: "B", icon: "🥂", label: "家に帰ってからも旅の余韻を楽しめるよう、地酒や調味料・器を一緒に選ぶ" },
+                        { id: "C", icon: "🧸", label: "行った記念になるペアのキーホルダーや雑貨をひとつだけ買いたい" },
+                        { id: "D", icon: "🚄", label: "荷物を増やしたくないので、帰りの駅や空港でサッと定番を買う派" }
+                    ]
+                },
+                {
+                    id: 9, category: "行ってみたいデスティネーション", emoji: "🌍",
+                    text: "もしお休みとお金がたっぷりあったら、ふたりでどこへ行きたい？",
+                    options: [
+                        { id: "A", icon: "🏝️", label: "ハワイや沖縄・モルディブなど、青い海と南国リゾートでバカンス" },
+                        { id: "B", icon: "🏰", label: "ヨーロッパの街並みや世界遺産、美術館を巡るロマンチックな旅" },
+                        { id: "C", icon: "🍜", label: "台湾・韓国・北海道など、とにかく美味しいものを食べ尽くす美食旅" },
+                        { id: "D", icon: "🌌", label: "満天の星空やオーロラ、秘境の温泉など大自然の絶景を体感する旅" }
+                    ]
+                },
+                {
+                    id: 10, category: "旅の締めくくり", emoji: "🏠",
+                    text: "旅行から帰ってきた日の夜、どうやって締めくくりたい？",
+                    options: [
+                        { id: "A", icon: "📱", label: "撮った写真のアルバムを共有して「ここ楽しかったね！」と振り返り会" },
+                        { id: "B", icon: "🍜", label: "買ってきたお土産やラーメンを食べながら、お家の安心感を味わう" },
+                        { id: "C", icon: "🧺", label: "荷解きと洗濯をふたりで一気に片付けて、スッキリしてぐっすり眠る" },
+                        { id: "D", icon: "🗓️", label: "「次はどこ行く？」と早速次の旅行の計画を立て始める！" }
+                    ]
+                }
+            ]
+        };
+
+        // --- Active Questions List ---
+        let questions = questionBanks.standard.slice(0, 6);
+
+        // --- App State ---
+        let state = {
+            p1Name: "あなた",
+            p2Name: "パートナー",
+            relation: "恋人・カップル",
+            theme: "standard",
+            questionCount: 6,
+            currentPlayer: 1, // 1 or 2
+            currentQuestionIndex: 0,
+            p1Answers: [],
+            p2Answers: [],
+            lastAnalysisResult: null,
+            artStyleIndex: 0,
+            isAnswering: false,
+            scoreTimer: null
+        };
+
+        function safeCreateIcons() {
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+
+        // Initialize Icons
+        window.addEventListener('DOMContentLoaded', () => {
+            safeCreateIcons();
+        });
+
+        // --- Setup Functions ---
+        function selectRelation(rel, clickedBtn) {
+            state.relation = rel;
+            const buttons = document.querySelectorAll('#relation-selector .rel-btn');
+            buttons.forEach(btn => {
+                const isSelected = (clickedBtn && btn === clickedBtn) || btn.getAttribute('data-relation') === rel;
+                if (isSelected) {
+                    btn.className = "rel-btn active py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-pink-500 bg-pink-50 text-pink-700 transition";
+                } else {
+                    btn.className = "rel-btn py-2.5 px-3 rounded-xl text-xs font-bold border-2 border-transparent bg-white/80 text-slate-600 hover:bg-white transition";
+                }
+            });
+        }
+
+        function selectTheme(themeKey) {
+            state.theme = themeKey;
+            const buttons = document.querySelectorAll('#theme-selector .theme-btn');
+            buttons.forEach(btn => {
+                const isSelected = btn.getAttribute('data-theme') === themeKey;
+                const titleEl = btn.querySelector('.font-extrabold');
+                if (isSelected) {
+                    btn.className = "theme-btn active p-3 rounded-2xl text-left border-2 border-violet-500 bg-violet-50/90 transition flex items-center gap-3";
+                    if (titleEl) titleEl.className = "text-xs font-extrabold text-violet-800";
+                } else {
+                    btn.className = "theme-btn p-3 rounded-2xl text-left border-2 border-transparent bg-white/80 hover:bg-white transition flex items-center gap-3";
+                    if (titleEl) titleEl.className = "text-xs font-extrabold text-slate-700";
+                }
+            });
+        }
+
+        function selectCount(count) {
+            state.questionCount = count;
+            const buttons = document.querySelectorAll('#count-selector .count-btn');
+            buttons.forEach(btn => {
+                const isSelected = parseInt(btn.getAttribute('data-count'), 10) === count;
+                if (isSelected) {
+                    btn.className = "count-btn active py-2.5 px-4 rounded-xl text-xs font-bold border-2 border-pink-500 bg-pink-50 text-pink-700 transition flex items-center justify-center gap-1.5";
+                } else {
+                    btn.className = "count-btn py-2.5 px-4 rounded-xl text-xs font-bold border-2 border-transparent bg-white/80 text-slate-600 hover:bg-white transition flex items-center justify-center gap-1.5";
+                }
+            });
+        }
+
+        function startQuiz() {
+            const p1Input = document.getElementById('p1-name').value.trim();
+            const p2Input = document.getElementById('p2-name').value.trim();
+            state.p1Name = p1Input || "あなた";
+            state.p2Name = p2Input || "パートナー";
+            state.currentPlayer = 1;
+            state.currentQuestionIndex = 0;
+            state.p1Answers = [];
+            state.p2Answers = [];
+            state.isAnswering = false;
+
+            // Load questions for selected theme & count
+            const bank = questionBanks[state.theme] || questionBanks.standard;
+            questions = bank.slice(0, state.questionCount);
+
+            // Update name labels & counts across UI
+            document.querySelectorAll('.p1-name-display').forEach(el => el.textContent = state.p1Name);
+            document.querySelectorAll('.p2-name-display').forEach(el => el.textContent = state.p2Name);
+            document.getElementById('handover-q-count').textContent = questions.length;
+            const loadingCountEl = document.getElementById('loading-q-count-text');
+            if (loadingCountEl) {
+                loadingCountEl.textContent = `${questions.length}つの価値観データを照合`;
+            }
+
+            const badge = document.getElementById('mode-badge');
+            badge.textContent = `${themeMeta[state.theme].badge} • ${state.relation}`;
+            badge.classList.remove('hidden');
+
+            showScreen('screen-quiz');
+            renderQuestion();
+        }
+
+        function startPlayer2Quiz() {
+            state.currentPlayer = 2;
+            state.currentQuestionIndex = 0;
+            state.isAnswering = false;
+            showScreen('screen-quiz');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[state.currentQuestionIndex];
+            const total = questions.length;
+            const currentNum = state.currentQuestionIndex + 1;
+
+            // Update turn banner style
+            const turnIndicator = document.getElementById('turn-indicator');
+            const playerLabel = document.getElementById('current-player-label');
+            if (state.currentPlayer === 1) {
+                turnIndicator.className = "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-pink-100 text-pink-700";
+                playerLabel.textContent = `${state.p1Name} さんの回答ターン`;
+            } else {
+                turnIndicator.className = "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-violet-100 text-violet-700";
+                playerLabel.textContent = `${state.p2Name} さんの回答ターン`;
+            }
+
+            document.getElementById('q-current-num').textContent = currentNum;
+            document.getElementById('q-total-num').textContent = total;
+            document.getElementById('q-progress-bar').style.width = `${(currentNum / total) * 100}%`;
+
+            document.getElementById('q-emoji').textContent = q.emoji;
+            document.getElementById('q-category').textContent = q.category;
+            document.getElementById('q-text').textContent = q.text;
+
+            const optionsContainer = document.getElementById('q-options');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                const borderHover = state.currentPlayer === 1 ? 'hover:border-pink-400 hover:bg-pink-50/60' : 'hover:border-violet-400 hover:bg-violet-50/60';
+                btn.className = `option-btn w-full p-4 rounded-2xl bg-white/90 border-2 border-slate-100 ${borderHover} text-left flex items-center gap-3.5 shadow-sm`;
+                btn.onclick = () => handleAnswer(opt.id);
+                btn.innerHTML = `
+                    <span class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl shrink-0">${opt.icon}</span>
+                    <span class="text-sm sm:text-base font-bold text-slate-700 leading-snug">${opt.label}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(optionId) {
+            if (state.isAnswering) return;
+            state.isAnswering = true;
+
+            if (state.currentPlayer === 1) {
+                state.p1Answers.push(optionId);
+            } else {
+                state.p2Answers.push(optionId);
+            }
+
+            setTimeout(() => {
+                state.isAnswering = false;
+                if (state.currentQuestionIndex < questions.length - 1) {
+                    state.currentQuestionIndex++;
+                    renderQuestion();
+                } else {
+                    if (state.currentPlayer === 1) {
+                        showScreen('screen-handover');
+                    } else {
+                        finishQuizAndAnalyze();
+                    }
+                }
+            }, 120);
+        }
+
+        // --- Exponential Backoff Fetch Helper ---
+        async function fetchWithRetry(url, options, maxRetries = 3) {
+            let delay = 1000;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 15000);
+                    const response = await fetch(url, { ...options, signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                } catch (err) {
+                    // Retry silently according to rules
+                }
+                if (i < maxRetries - 1) {
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2;
+                }
+            }
+            throw new Error("API call failed after retries");
+        }
+
+        function parseAiJson(rawText) {
+            if (!rawText) throw new Error("Empty AI response");
+            const cleaned = rawText
+                .replace(/^```json\s*/i, '')
+                .replace(/^```\s*/i, '')
+                .replace(/\s*```$/i, '')
+                .trim();
+            return JSON.parse(cleaned);
+        }
+
+        // --- Dynamic Fallback Generator based on actual answers ---
+        function buildDynamicFallback(matchCount, totalQ) {
+            const ratio = matchCount / totalQ;
+            const score = Math.min(99, Math.max(74, Math.round(76 + ratio * 23)));
+
+            const matchedCategories = [];
+            const diffCategories = [];
+            questions.forEach((q, idx) => {
+                if (state.p1Answers[idx] === state.p2Answers[idx]) {
+                    matchedCategories.push(q.category);
+                } else {
+                    diffCategories.push(q.category);
+                }
+            });
+
+            const firstQ = questions[0];
+            const p1FirstChoice = firstQ.options.find(o => o.id === state.p1Answers[0]) || firstQ.options[0];
+            const p2FirstChoice = firstQ.options.find(o => o.id === state.p2Answers[0]) || firstQ.options[0];
+
+            let coupleTitle = "笑顔と刺激が交差するベストパートナー";
+            if (ratio >= 0.8) {
+                coupleTitle = "阿吽の呼吸！テレパシー級の超高シンクロコンビ";
+            } else if (ratio >= 0.5) {
+                coupleTitle = "共感と発見が響き合う黄金バランスペア";
+            } else if (ratio >= 0.25) {
+                coupleTitle = "お互いの世界を広げ合う化学反応コンビ";
+            } else {
+                coupleTitle = "正反対だからこそ惹かれ合う唯一無二の相棒";
+            }
+
+            const matchText = matchedCategories.length > 0
+                ? `特に「${matchedCategories.slice(0, 2).join("」や「")}」の感覚がぴったり一致しており、言葉にしなくても心地よさを共有できる関係です。`
+                : `ひとつひとつの質問でお互いの個性が鮮やかに発揮されており、一緒にいると退屈する暇がないワクワクする関係です。`;
+
+            const diffText = diffCategories.length > 0
+                ? `一方で「${diffCategories.slice(0, 2).join("」や「")}」でのアプローチの違いは、ひとりでは気づけない新しい視点を相手にもたらす最高のスパイスになります。`
+                : `これほど価値観が揃うのは珍しいからこそ、たまには普段選ばない選択肢にふたりで挑戦するとさらに絆が深まります。`;
+
+            return {
+                score,
+                coupleTitle,
+                analysis: `${state.p1Name}さんと${state.p2Name}さんは、${totalQ}問中${matchCount}問で価値観がシンクロ！${matchText}${diffText}`,
+                strength: matchedCategories.length >= diffCategories.length
+                    ? "波長が自然と合うため無理をする必要がなく、どんな時も味方でいられる抜群の安心感がふたりの最大の強みです。"
+                    : "お互いにない視点や得意分野を持っており、ピンチの時でも2人分のアイデアで楽しく乗り越えられる対応力が魅力です。",
+                tip: "意見が分かれた時は「今日は" + state.p1Name + "さんの案、次回は" + state.p2Name + "さんの案！」と交互に体験するルールにすると、楽しさが2倍に広がります。",
+                dateIdea: `${state.p1Name}さんが選んだ「${p1FirstChoice.label.slice(0, 14)}…」の要素と、${state.p2Name}さんが選んだ「${p2FirstChoice.label.slice(0, 14)}…」の気分を半分ずつ取り入れた、ふたりだけの欲張りプランを今度の休日に実行してみましょう！`
+            };
+        }
+
+        // --- AI Compatibility Analysis ---
+        async function finishQuizAndAnalyze() {
+            showScreen('screen-loading');
+
+            const totalQ = questions.length;
+            let matchCount = 0;
+            const comparisonSummary = questions.map((q, idx) => {
+                const a1 = q.options.find(o => o.id === state.p1Answers[idx]) || q.options[0];
+                const a2 = q.options.find(o => o.id === state.p2Answers[idx]) || q.options[0];
+                const isMatch = state.p1Answers[idx] === state.p2Answers[idx];
+                if (isMatch) matchCount++;
+                return `質問${idx + 1} (${q.category}): ${state.p1Name}=「${a1.label}」 / ${state.p2Name}=「${a2.label}」 (${isMatch ? '一致' : '違いあり'})`;
+            }).join('\n');
+
+            const currentThemeName = themeMeta[state.theme]?.name || "王道バランス診断";
+
+            const systemPrompt = `あなたはユーモアと洞察力にあふれる大人気のAI相性診断アナリストです。
+2人のプレイヤーの回答データを比較し、ただ「一致しているから良い」「違うから悪い」ではなく、一致している部分は「共感・シンクロの強さ」、異なっている部分は「お互いを補い合える新しい視点（ケミストリー）」としてポジティブかつ具体的に分析してください。
+回答はすべて温かく楽しい日本語で、指定されたJSONフォーマットのみで出力してください。`;
+
+            const userQuery = `以下の2人の診断データから相性を詳しく分析してください。
+・診断テーマコース: ${currentThemeName}
+・プレイヤー1の名前: ${state.p1Name}
+・プレイヤー2の名前: ${state.p2Name}
+・2人の関係性: ${state.relation}
+・${totalQ}問中の一致数: ${matchCount}問
+
+【回答詳細】
+${comparisonSummary}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            score: {
+                                type: "INTEGER",
+                                description: "72から99の間の相性パーセンテージ数値。一致数や補完関係から算出。"
+                            },
+                            coupleTitle: {
+                                type: "STRING",
+                                description: "2人の関係性を表すキャッチーでユニークな二つ名（例：『阿吽の呼吸！無敵のゆるふわ探検隊』など）"
+                            },
+                            analysis: {
+                                type: "STRING",
+                                description: "2人の回答傾向を踏まえた具体的な相性総評（180〜250文字程度）"
+                            },
+                            strength: {
+                                type: "STRING",
+                                description: "この2人ならではの強みや魅力（80〜120文字程度）"
+                            },
+                            tip: {
+                                type: "STRING",
+                                description: "違いを楽しみ、さらに仲を深めるためのワンポイント秘訣（80〜120文字程度）"
+                            },
+                            dateIdea: {
+                                type: "STRING",
+                                description: "2人の回答の好みを掛け合わせた具体的なおすすめデートプランや過ごし方（100〜150文字程度）"
+                            }
+                        },
+                        required: ["score", "coupleTitle", "analysis", "strength", "tip", "dateIdea"]
+                    }
+                }
+            };
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            try {
+                const result = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                const parsed = parseAiJson(jsonText);
+                state.lastAnalysisResult = { ...parsed, matchCount, totalQ, comparisonSummary };
+                displayResults(parsed, matchCount, totalQ);
+            } catch (error) {
+                // Dynamic fallback tailored to the players' actual answers
+                const fallbackData = buildDynamicFallback(matchCount, totalQ);
+                state.lastAnalysisResult = { ...fallbackData, matchCount, totalQ, comparisonSummary };
+                displayResults(fallbackData, matchCount, totalQ);
+            }
+        }
+
+        function displayResults(data, matchCount, totalQ = questions.length) {
+            showScreen('screen-result');
+            document.getElementById('followup-response-box').classList.add('hidden');
+
+            const currentThemeBadge = themeMeta[state.theme]?.badge || "🌟 王道バランス";
+            document.getElementById('res-relation-badge').textContent = `${currentThemeBadge} × ${state.relation}`;
+            document.getElementById('res-title').textContent = data.coupleTitle;
+            document.getElementById('res-match-count').textContent = `${totalQ}問中 ${matchCount}問 ぴったり一致！`;
+            document.getElementById('res-analysis').textContent = data.analysis;
+            document.getElementById('res-strength').textContent = data.strength;
+            document.getElementById('res-tip').textContent = data.tip;
+            document.getElementById('res-date').textContent = data.dateIdea;
+
+            // Trigger AI Couple Illustration Generation asynchronously
+            generateCoupleIllustration(data);
+
+            // Animate Score & Circle
+            const scoreEl = document.getElementById('res-score');
+            const circleEl = document.getElementById('score-circle');
+            const circumference = 326.7;
+            const targetScore = Math.max(50, Math.min(100, data.score));
+
+            if (state.scoreTimer) {
+                clearInterval(state.scoreTimer);
+            }
+
+            let current = 0;
+            const step = Math.ceil(targetScore / 35);
+            state.scoreTimer = setInterval(() => {
+                current += step;
+                if (current >= targetScore) {
+                    current = targetScore;
+                    clearInterval(state.scoreTimer);
+                    state.scoreTimer = null;
+                }
+                scoreEl.textContent = current;
+            }, 25);
+
+            setTimeout(() => {
+                const offset = circumference - (targetScore / 100) * circumference;
+                circleEl.style.strokeDashoffset = offset;
+            }, 100);
+
+            // Render Answer Comparison List
+            const compList = document.getElementById('comparison-list');
+            compList.innerHTML = '';
+
+            questions.forEach((q, idx) => {
+                const a1 = q.options.find(o => o.id === state.p1Answers[idx]) || q.options[0];
+                const a2 = q.options.find(o => o.id === state.p2Answers[idx]) || q.options[0];
+                const isMatch = state.p1Answers[idx] === state.p2Answers[idx];
+
+                const item = document.createElement('div');
+                item.className = `p-4 rounded-2xl border ${isMatch ? 'bg-pink-50/50 border-pink-200' : 'bg-white/70 border-slate-100'}`;
+                item.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
+                            <span>${q.emoji}</span> Q${idx + 1}. ${q.category}
+                        </span>
+                        <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full ${isMatch ? 'bg-pink-500 text-white' : 'bg-slate-200 text-slate-600'}">
+                            ${isMatch ? '✨ シンクロ！' : '💡 個性あり'}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <div class="bg-white/90 p-2.5 rounded-xl border border-pink-100">
+                            <span class="font-bold text-pink-600 block mb-0.5">${escapeSvgText(state.p1Name)}</span>
+                            <span class="text-slate-700">${a1.icon} ${a1.label}</span>
+                        </div>
+                        <div class="bg-white/90 p-2.5 rounded-xl border border-violet-100">
+                            <span class="font-bold text-violet-600 block mb-0.5">${escapeSvgText(state.p2Name)}</span>
+                            <span class="text-slate-700">${a2.icon} ${a2.label}</span>
+                        </div>
+                    </div>
+                `;
+                compList.appendChild(item);
+            });
+
+            safeCreateIcons();
+        }
+
+        // --- Custom Couple Illustration & Harmony Card Generator (100% Reliable SVG Art) ---
+        const artThemes = [
+            {
+                name: "ゆるふわアニマル・カフェタイム",
+                bg1: "#fff1f2", bg2: "#f5f3ff", accent: "#ec4899", subAccent: "#8b5cf6",
+                leftChar: "🐱", rightChar: "🐶", centerIcon: "☕",
+                deco1: "🍰", deco2: "🎵", deco3: "🌸"
+            },
+            {
+                name: "星空ロマンチック・ナイトクルーズ",
+                bg1: "#eef2ff", bg2: "#fae8ff", accent: "#6366f1", subAccent: "#d946ef",
+                leftChar: "🐰", rightChar: "🦊", centerIcon: "🌙",
+                deco1: "✨", deco2: "🪐", deco3: "💫"
+            },
+            {
+                name: "ひだまりピクニック＆冒険日和",
+                bg1: "#fef3c7", bg2: "#fce7f3", accent: "#f59e0b", subAccent: "#ec4899",
+                leftChar: "🐻", rightChar: "🐼", centerIcon: "🍀",
+                deco1: "🎈", deco2: "🥪", deco3: "🌈"
+            },
+            {
+                name: "やすらぎお家ライフ＆シネマ",
+                bg1: "#ecfdf5", bg2: "#eff6ff", accent: "#10b981", subAccent: "#3b82f6",
+                leftChar: "🐧", rightChar: "🐥", centerIcon: "🏠",
+                deco1: "🍿", deco2: "🎮", deco3: "🪴"
+            }
+        ];
+
+        function generateCoupleIllustration(analysisData) {
+            const container = document.getElementById('couple-art-container');
+            const captionEl = document.getElementById('img-caption');
+            if (!container) return;
+
+            const themeIndex = state.artStyleIndex % artThemes.length;
+            const style = artThemes[themeIndex];
+            const score = analysisData?.score || 88;
+            const title = analysisData?.coupleTitle || "最高のベストパートナー";
+
+            // Pick icons from actual user answers to personalize the illustration
+            const bank = questionBanks[state.theme] || questionBanks.standard;
+            const p1FavIcon = bank[0]?.options.find(o => o.id === state.p1Answers[0])?.icon || style.deco1;
+            const p2FavIcon = bank[0]?.options.find(o => o.id === state.p2Answers[0])?.icon || style.deco2;
+
+            // Calculate 3 harmony bars from answers
+            const totalQ = state.lastAnalysisResult?.totalQ || questions.length || 6;
+            const matchCount = state.lastAnalysisResult?.matchCount ?? 3;
+            const syncRate = Math.min(99, Math.round(65 + (matchCount / totalQ) * 34));
+            const chemRate = Math.min(99, Math.round(75 + ((totalQ - matchCount) / totalQ) * 22));
+            const smileRate = Math.min(99, Math.round((score + syncRate) / 2));
+
+            container.innerHTML = `
+                <svg viewBox="0 0 400 420" class="w-full h-auto block select-none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="cardBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="${style.bg1}" />
+                            <stop offset="100%" stop-color="${style.bg2}" />
+                        </linearGradient>
+                        <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="${style.accent}" />
+                            <stop offset="100%" stop-color="${style.subAccent}" />
+                        </linearGradient>
+                        <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+                            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.06"/>
+                        </filter>
+                    </defs>
+
+                    <!-- Background -->
+                    <rect width="400" height="420" fill="url(#cardBgGrad)" />
+
+                    <!-- Decorative Circles -->
+                    <circle cx="65" cy="70" r="45" fill="${style.accent}" opacity="0.08" />
+                    <circle cx="340" cy="110" r="60" fill="${style.subAccent}" opacity="0.08" />
+                    <circle cx="200" cy="175" r="95" fill="#ffffff" opacity="0.7" filter="url(#softShadow)" />
+
+                    <!-- Top Ribbon Badge -->
+                    <rect x="70" y="20" width="260" height="28" rx="14" fill="#ffffff" opacity="0.9" />
+                    <text x="200" y="38" text-anchor="middle" font-size="11" font-weight="800" fill="${style.accent}" font-family="'M PLUS Rounded 1c', sans-serif">
+                        ✨ AI HARMONY ART CARD ✨
+                    </text>
+
+                    <!-- Floating Answer Motifs -->
+                    <g font-size="22" text-anchor="middle">
+                        <text x="72" y="105">${p1FavIcon}</text>
+                        <text x="328" y="105">${p2FavIcon}</text>
+                        <text x="90" y="235">${style.deco1}</text>
+                        <text x="310" y="235">${style.deco3}</text>
+                    </g>
+
+                    <!-- Center Heart Aura -->
+                    <path d="M200 135 C 200 120, 175 110, 168 126 C 160 142, 200 162, 200 172 C 200 162, 240 142, 232 126 C 225 110, 200 120, 200 135 Z"
+                          fill="${style.accent}" opacity="0.22" transform="scale(1.4) translate(-57, -38)" />
+
+                    <!-- Character Avatars -->
+                    <circle cx="145" cy="175" r="38" fill="#ffffff" stroke="${style.accent}" stroke-width="3" filter="url(#softShadow)" />
+                    <text x="145" y="189" text-anchor="middle" font-size="40">${style.leftChar}</text>
+
+                    <circle cx="255" cy="175" r="38" fill="#ffffff" stroke="${style.subAccent}" stroke-width="3" filter="url(#softShadow)" />
+                    <text x="255" y="189" text-anchor="middle" font-size="40">${style.rightChar}</text>
+
+                    <!-- Center Symbol Badge -->
+                    <circle cx="200" cy="140" r="20" fill="url(#badgeGrad)" filter="url(#softShadow)" />
+                    <text x="200" y="147" text-anchor="middle" font-size="18">${style.centerIcon}</text>
+
+                    <!-- Names & Score Pill -->
+                    <rect x="55" y="226" width="290" height="32" rx="16" fill="#ffffff" filter="url(#softShadow)" />
+                    <text x="200" y="247" text-anchor="middle" font-size="13" font-weight="800" fill="#334155" font-family="'M PLUS Rounded 1c', sans-serif">
+                        ${escapeSvgText(state.p1Name)} ✕ ${escapeSvgText(state.p2Name)} （相性 ${score}%）
+                    </text>
+
+                    <!-- Title Banner -->
+                    <text x="200" y="284" text-anchor="middle" font-size="13" font-weight="800" fill="${style.accent}" font-family="'M PLUS Rounded 1c', sans-serif">
+                        『${escapeSvgText(title.length > 20 ? title.slice(0, 20) + '…' : title)}』
+                    </text>
+
+                    <!-- 3 Harmony Parameter Bars -->
+                    <g transform="translate(45, 302)" font-family="'M PLUS Rounded 1c', sans-serif">
+                        <rect width="310" height="96" rx="16" fill="#ffffff" opacity="0.88" filter="url(#softShadow)" />
+
+                        <!-- Bar 1 -->
+                        <text x="18" y="26" font-size="10" font-weight="700" fill="#64748b">共感・シンクロ波</text>
+                        <rect x="115" y="17" width="145" height="9" rx="4.5" fill="#f1f5f9" />
+                        <rect x="115" y="17" width="${Math.round(1.45 * syncRate)}" height="9" rx="4.5" fill="${style.accent}" />
+                        <text x="292" y="26" text-anchor="end" font-size="10" font-weight="800" fill="${style.accent}">${syncRate}%</text>
+
+                        <!-- Bar 2 -->
+                        <text x="18" y="53" font-size="10" font-weight="700" fill="#64748b">補完ケミストリー</text>
+                        <rect x="115" y="44" width="145" height="9" rx="4.5" fill="#f1f5f9" />
+                        <rect x="115" y="44" width="${Math.round(1.45 * chemRate)}" height="9" rx="4.5" fill="${style.subAccent}" />
+                        <text x="292" y="53" text-anchor="end" font-size="10" font-weight="800" fill="${style.subAccent}">${chemRate}%</text>
+
+                        <!-- Bar 3 -->
+                        <text x="18" y="80" font-size="10" font-weight="700" fill="#64748b">ハッピーオーラ度</text>
+                        <rect x="115" y="71" width="145" height="9" rx="4.5" fill="#f1f5f9" />
+                        <rect x="115" y="71" width="${Math.round(1.45 * smileRate)}" height="9" rx="4.5" fill="url(#badgeGrad)" />
+                        <text x="292" y="80" text-anchor="end" font-size="10" font-weight="800" fill="#db2777">${smileRate}%</text>
+                    </g>
+                </svg>
+            `;
+
+            captionEl.textContent = `🎨 テーマ：${style.name}（右上の「テイスト変更」で着せ替えできます）`;
+            safeCreateIcons();
+        }
+
+        function escapeSvgText(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function regenerateCoupleImage() {
+            if (!state.lastAnalysisResult) return;
+            state.artStyleIndex = (state.artStyleIndex + 1) % artThemes.length;
+            generateCoupleIllustration(state.lastAnalysisResult);
+        }
+
+        // --- Follow-up AI Advisor ---
+        async function askCustomFollowUp() {
+            const input = document.getElementById('custom-question');
+            const q = input.value.trim();
+            if (!q) return;
+            await askFollowUp(q);
+            input.value = '';
+        }
+
+        async function askFollowUp(questionText) {
+            const box = document.getElementById('followup-response-box');
+            const askBtn = document.getElementById('ask-btn');
+            box.classList.remove('hidden');
+            box.innerHTML = `<div class="flex items-center gap-2 text-violet-600 font-bold"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> AIがふたりのために考え中...</div>`;
+            safeCreateIcons();
+            askBtn.disabled = true;
+
+            const systemPrompt = `あなたは親しみやすいAIカップル・パートナーアドバイザーです。診断結果と2人の回答傾向を踏まえて、具体的で楽しく実践しやすいアドバイスを250文字程度で簡潔に答えてください。`;
+            const userQuery = `【2人の情報】
+${state.p1Name}と${state.p2Name}（${state.relation}）
+診断タイプ：${state.lastAnalysisResult?.coupleTitle}
+回答内容：
+${state.lastAnalysisResult?.comparisonSummary}
+
+【質問】
+${questionText}`;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            try {
+                const result = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: userQuery }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                    })
+                });
+                const reply = result.candidates?.[0]?.content?.parts?.[0]?.text || "申し訳ありません、うまく回答を生成できませんでした。もう一度お試しください！";
+                box.innerHTML = `<div class="font-bold text-violet-700 mb-1">Q. ${escapeSvgText(questionText)}</div><div>${escapeSvgText(reply)}</div>`;
+            } catch (e) {
+                // Fallback advice if offline or API throttled
+                const fallbackReply = `${state.p1Name}さんと${state.p2Name}さんなら、お互いの「実はやってみたかったこと」を1つずつ出し合って、今度の休日に両方体験してみるのがおすすめです！小さな違いも「そっちの視点はなかった！」と面白がることで、さらに仲が深まりますよ✨`;
+                box.innerHTML = `<div class="font-bold text-violet-700 mb-1">Q. ${escapeSvgText(questionText)}</div><div>${escapeSvgText(fallbackReply)}</div>`;
+            } finally {
+                askBtn.disabled = false;
+            }
+        }
+
+        // --- Share & Navigation Helpers ---
+        function copyResult() {
+            if (!state.lastAnalysisResult) return;
+            const r = state.lastAnalysisResult;
+            const currentThemeName = themeMeta[state.theme]?.name || "王道バランス診断";
+            const shareText = `✨【AIシンクロ相性診断 - ${currentThemeName}】✨\n${state.p1Name} ＆ ${state.p2Name}（${state.relation}）\n\n💖 相性スコア：${r.score}%（${r.totalQ}問中${r.matchCount}問一致！）\n🏆 ふたりの称号：『${r.coupleTitle}』\n\n💬 AI総評：\n${r.analysis}\n\n📅 おすすめデート：\n${r.dateIdea}`;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = shareText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast("診断結果をクリップボードにコピーしました！");
+            } catch (err) {
+                showToast("コピーに失敗しました");
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-2');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-2');
+            }, 2800);
+        }
+
+        function showScreen(screenId) {
+            const screens = ['screen-setup', 'screen-quiz', 'screen-handover', 'screen-loading', 'screen-result'];
+            screens.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            safeCreateIcons();
+        }
+
+        function confirmReset() {
+            resetApp();
+        }
+
+        function resetApp() {
+            document.getElementById('mode-badge').classList.add('hidden');
+            document.getElementById('score-circle').style.strokeDashoffset = 326.7;
+            showScreen('screen-setup');
+        }
+    </script>
+</body>
+</html>
